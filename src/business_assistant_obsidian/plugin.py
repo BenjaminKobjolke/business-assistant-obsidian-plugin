@@ -80,6 +80,25 @@ def _obsidian_edit_note(
     return _get_service(ctx).edit_note(vault, note_path, content, mode=mode)
 
 
+# --- Move / Delete tools ---
+
+
+def _obsidian_move_note(
+    ctx: RunContext[Deps], vault: str, from_path: str, to_path: str
+) -> str:
+    """Move or rename a note within a vault."""
+    logger.info(
+        "obsidian_move_note: vault=%r from=%r to=%r", vault, from_path, to_path
+    )
+    return _get_service(ctx).move_note(vault, from_path, to_path)
+
+
+def _obsidian_delete_note(ctx: RunContext[Deps], vault: str, note_path: str) -> str:
+    """Delete a note from a vault."""
+    logger.info("obsidian_delete_note: vault=%r note_path=%r", vault, note_path)
+    return _get_service(ctx).delete_note(vault, note_path)
+
+
 # --- Folder / Tag tools ---
 
 
@@ -117,6 +136,8 @@ def register(registry: PluginRegistry) -> None:
         Tool(_obsidian_search_notes, name="obsidian_search_notes"),
         Tool(_obsidian_create_note, name="obsidian_create_note"),
         Tool(_obsidian_edit_note, name="obsidian_edit_note"),
+        Tool(_obsidian_move_note, name="obsidian_move_note"),
+        Tool(_obsidian_delete_note, name="obsidian_delete_note"),
         Tool(_obsidian_list_folders, name="obsidian_list_folders"),
         Tool(_obsidian_list_tags, name="obsidian_list_tags"),
     ]

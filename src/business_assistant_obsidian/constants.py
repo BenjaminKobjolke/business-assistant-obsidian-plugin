@@ -37,6 +37,7 @@ ERR_NOTE_NOT_FOUND = "Note '{note}' not found in vault '{vault}'."
 ERR_NOTE_ALREADY_EXISTS = "Note '{note}' already exists in vault '{vault}'."
 ERR_INVALID_EDIT_MODE = "Invalid edit mode '{mode}'. Use 'append', 'prepend', or 'replace'."
 ERR_PATH_TRAVERSAL = "Invalid note path '{note}': path must stay within the vault."
+ERR_MOVE_SAME_PATH = "Source and destination are the same: '{note}'."
 
 # System prompt extra
 SYSTEM_PROMPT_OBSIDIAN = """You have access to Obsidian vault tools for managing notes:
@@ -48,6 +49,8 @@ SYSTEM_PROMPT_OBSIDIAN = """You have access to Obsidian vault tools for managing
 - obsidian_search_notes(vault, query): Full-text search across notes (filename + content)
 - obsidian_create_note(vault, note_path, content): Create a new note ("folder/name.md")
 - obsidian_edit_note(vault, note_path, content, mode="append"): Edit a note (append/prepend/replace)
+- obsidian_move_note(vault, from_path, to_path): Move/rename a note
+- obsidian_delete_note(vault, note_path): Delete a note
 - obsidian_list_folders(vault): List all folders in a vault
 - obsidian_list_tags(vault): List all tags found across notes in a vault
 
@@ -57,10 +60,10 @@ SYSTEM_PROMPT_OBSIDIAN = """You have access to Obsidian vault tools for managing
 - Notes are Markdown (.md) files. Always include the .md extension in note_path.
 - Tags use #tag syntax in Obsidian notes.
 
-## Creating / Editing notes — IMPORTANT
-When the user asks to create or edit a note:
-1. Show a preview of what will be created/changed
-2. Ask for confirmation before creating or editing
+## Creating / Editing / Moving / Deleting notes — IMPORTANT
+When the user asks to create, edit, move, or delete a note:
+1. Show a preview of what will be changed
+2. Ask for confirmation before proceeding
 3. ONLY call the tool after explicit user confirmation
 
 ## Formatting — CRITICAL

@@ -14,6 +14,7 @@ from .constants import (
     EDIT_MODE_APPEND,
     EDIT_MODE_REPLACE,
     ERR_INVALID_EDIT_MODE,
+    ERR_MOVE_SAME_PATH,
     ERR_NOTE_ALREADY_EXISTS,
     ERR_NOTE_NOT_FOUND,
     ERR_PATH_TRAVERSAL,
@@ -206,6 +207,42 @@ class ObsidianService:
             return f"Note updated ({mode}): {note_path}"
         except Exception as e:
             return f"Error editing note: {e}"
+
+    def move_note(self, vault_name: str, from_path: str, to_path: str) -> str:
+        """Move or rename a note within a vault."""
+        try:
+            config = self._resolve_vault(vault_name)
+            src = self._resolve_note_path(config, from_path)
+            dst = self._resolve_note_path(config, to_path)
+
+            if src == dst:
+                return ERR_MOVE_SAME_PATH.format(note=from_path)
+
+            if not src.is_file():
+                return ERR_NOTE_NOT_FOUND.format(note=from_path, vault=vault_name)
+
+            if dst.exists():
+                return ERR_NOTE_ALREADY_EXISTS.format(note=to_path, vault=vault_name)
+
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            src.rename(dst)
+            return f"Note moved: {from_path} -> {to_path}"
+        except Exception as e:
+            return f"Error moving note: {e}"
+
+    def delete_note(self, vault_name: str, note_path: str) -> str:
+        """Delete a note from a vault."""
+        try:
+            config = self._resolve_vault(vault_name)
+            full_path = self._resolve_note_path(config, note_path)
+
+            if not full_path.is_file():
+                return ERR_NOTE_NOT_FOUND.format(note=note_path, vault=vault_name)
+
+            full_path.unlink()
+            return f"Note deleted: {note_path}"
+        except Exception as e:
+            return f"Error deleting note: {e}"
 
     def list_folders(self, vault_name: str) -> str:
         """List all folders in a vault."""

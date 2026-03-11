@@ -194,6 +194,72 @@ class TestEditNote:
         assert content.endswith("Default append")
 
 
+class TestMoveNote:
+    def test_moves_note(self, service: ObsidianService, vault_root: Path) -> None:
+        result = service.move_note("TestVault", "readme.md", "Daily/readme.md")
+        assert "moved" in result.lower()
+        assert not (vault_root / "readme.md").exists()
+        assert (vault_root / "Daily" / "readme.md").is_file()
+
+    def test_moves_to_new_folder(self, service: ObsidianService, vault_root: Path) -> None:
+        result = service.move_note("TestVault", "readme.md", "Archive/readme.md")
+        assert "moved" in result.lower()
+        assert (vault_root / "Archive" / "readme.md").is_file()
+
+    def test_rename_note(self, service: ObsidianService, vault_root: Path) -> None:
+        result = service.move_note("TestVault", "readme.md", "index.md")
+        assert "moved" in result.lower()
+        assert not (vault_root / "readme.md").exists()
+        assert (vault_root / "index.md").is_file()
+
+    def test_source_not_found(self, service: ObsidianService) -> None:
+        result = service.move_note("TestVault", "nonexistent.md", "target.md")
+        assert "not found" in result
+
+    def test_destination_already_exists(self, service: ObsidianService) -> None:
+        result = service.move_note(
+            "TestVault", "readme.md", "Projects/project-a.md"
+        )
+        assert "already exists" in result
+
+    def test_same_path(self, service: ObsidianService) -> None:
+        result = service.move_note("TestVault", "readme.md", "readme.md")
+        assert "same" in result.lower()
+
+    def test_vault_not_found(self, service: ObsidianService) -> None:
+        result = service.move_note("NonExistent", "a.md", "b.md")
+        assert "not found" in result
+
+    def test_path_traversal_blocked(self, service: ObsidianService) -> None:
+        result = service.move_note("TestVault", "readme.md", "../../evil.md")
+        assert "must stay within" in result or "Error" in result
+
+    def test_preserves_content(self, service: ObsidianService, vault_root: Path) -> None:
+        original = (vault_root / "readme.md").read_text(encoding="utf-8")
+        service.move_note("TestVault", "readme.md", "moved.md")
+        moved = (vault_root / "moved.md").read_text(encoding="utf-8")
+        assert moved == original
+
+
+class TestDeleteNote:
+    def test_deletes_note(self, service: ObsidianService, vault_root: Path) -> None:
+        result = service.delete_note("TestVault", "readme.md")
+        assert "deleted" in result.lower()
+        assert not (vault_root / "readme.md").exists()
+
+    def test_note_not_found(self, service: ObsidianService) -> None:
+        result = service.delete_note("TestVault", "nonexistent.md")
+        assert "not found" in result
+
+    def test_vault_not_found(self, service: ObsidianService) -> None:
+        result = service.delete_note("NonExistent", "readme.md")
+        assert "not found" in result
+
+    def test_path_traversal_blocked(self, service: ObsidianService) -> None:
+        result = service.delete_note("TestVault", "../../etc/passwd")
+        assert "must stay within" in result or "Error" in result
+
+
 class TestListFolders:
     def test_lists_folders(self, service: ObsidianService) -> None:
         result = json.loads(service.list_folders("TestVault"))
